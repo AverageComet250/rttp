@@ -35,7 +35,7 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
     // Handle the connection
     print!(
-        "{} {} ",
+        "{} ({}) ",
         stream.peer_addr().unwrap().ip(),
         Local::now().format("%Y-%m-%d %H:%M:%S")
     );
