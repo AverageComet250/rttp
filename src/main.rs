@@ -4,6 +4,14 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+use chrono::Local;
+
+macro_rules! err {
+    ($($arg:tt)*) => {
+        eprintln!("\x09\x1b[31m{}\x1b[0m", format!($($arg)*))
+    };
+}
+
 fn main() {
     // let listener = TcpListener::bind("0.0.0.0:8080").expect("Could not bind to address");
 
@@ -11,29 +19,28 @@ fn main() {
         Ok(listener) => listener,
         Err(e) => {
             //panic!("Failed to bind: {}", e)
-            eprintln!("Failed to bind: {}", e);
+            err!("Failed to bind: {}", e);
             return;
         }
     };
 
     for stream in listener.incoming() {
-        println!("Connection incoming");
         match stream {
             Ok(stream) => handle_connection(stream),
-            Err(e) => eprintln!("Connection failed: {}", e),
+            Err(e) => err!("Connection failed: {}", e),
         }
-        println!("Waiting for next");
     }
 }
 
 fn handle_connection(mut stream: TcpStream) {
     // Handle the connection
-    println!("Handling Connection");
+    print!(
+        "{} {} ",
+        stream.peer_addr().unwrap().ip(),
+        Local::now().format("%Y-%m-%d %H:%M:%S")
+    );
 
     let req_buffer = BufReader::new(&stream);
-
-    println!("Request received");
-
     let req: Vec<_> = req_buffer
         .lines()
         .map(|line| match line {
@@ -42,27 +49,25 @@ fn handle_connection(mut stream: TcpStream) {
                 line
             }
             Err(e) => {
-                eprintln!("Error reading line: {}", e);
+                err!("Error reading line: {}", e);
                 String::new()
             }
         })
         .take_while(|line| !line.is_empty())
         .collect();
 
-    println!("Request: {:#?}", req);
-
     let mut file = String::new();
 
     if req[0].starts_with("GET") {
         if req[0].contains("/ ") {
             file = String::from("index.html");
+            println!("GET /");
         } else {
             file = req[0].split_whitespace().nth(1).unwrap().to_string();
             file.remove(0);
+            println!("GET /{}", file);
         }
     }
-
-    println!("req: {}", file);
 
     let args: Vec<String> = env::args().collect();
 
@@ -90,13 +95,13 @@ fn handle_connection(mut stream: TcpStream) {
         Ok(contents) => (contents, "HTTP/1.1 200 OK"),
         Err(e) => {
             if e.kind() == ErrorKind::NotFound {
-                eprintln!("404 Error: file not found");
+                err!("404 Error: file not found");
                 (
                     String::from("<h1>404 Error: file not found</h1>"),
                     "HTTP/1.1 404 Not Found",
                 )
             } else {
-                eprintln!("Error reading file: {}", e);
+                err!("Error reading file: {}", e);
 
                 (
                     String::from("<h1>Internal Server Error</h1>"),
@@ -107,10 +112,7 @@ fn handle_connection(mut stream: TcpStream) {
     };
 
     let length = contents.len();
-
     let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
 
     stream.write_all(response.as_bytes()).unwrap();
-
-    println!("Response sent");
 }
