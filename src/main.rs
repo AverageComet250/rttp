@@ -14,12 +14,15 @@ macro_rules! err {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let mut path = String::new();
-    if args.len() == 2 && args[1].ends_with("/") {
-        path.push_str(&args[1]);
+    let path = if args.len() == 2 {
+        if !(args[1].ends_with("/")) {
+            String::from(args[1].as_str()) + "/"
+        } else {
+            String::from(args[1].as_str())
+        }
     } else {
-        path.push_str("app/");
-    }
+        String::from("app/")
+    };
 
     let listener = match TcpListener::bind("0.0.0.0:8080") {
         Ok(listener) => listener,
