@@ -13,6 +13,14 @@ macro_rules! err {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let mut path = String::new();
+    if args.len() == 2 && args[1].ends_with("/") {
+        path.push_str(&args[1]);
+    } else {
+        path.push_str("app/");
+    }
+
     let listener = match TcpListener::bind("0.0.0.0:8080") {
         Ok(listener) => listener,
         Err(e) => {
@@ -24,13 +32,13 @@ fn main() {
 
     for stream in listener.incoming() {
         match stream {
-            Ok(stream) => handle_connection(stream),
+            Ok(stream) => handle_connection(stream, path.as_str()),
             Err(e) => err!("Connection failed: {}", e),
         }
     }
 }
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle_connection(mut stream: TcpStream, path: &str) {
     // Handle the connection
     print!(
         "{} ({}) ",
@@ -67,18 +75,9 @@ fn handle_connection(mut stream: TcpStream) {
         }
     }
 
-    let args: Vec<String> = env::args().collect();
+    file.insert_str(0, path);
 
-    let mut path = String::new();
-
-    if args.len() == 2 && args[1].ends_with("/") {
-        path.push_str(&args[1]);
-    } else {
-        path.push_str("app/");
-    }
-    path.push_str(&file);
-
-    let (contents, status_line) = match std::fs::read_to_string(path) {
+    let (contents, status_line) = match std::fs::read_to_string(file) {
         Ok(contents) => (contents, "HTTP/1.1 200 OK"),
         Err(e) => {
             if e.kind() == ErrorKind::NotFound {
