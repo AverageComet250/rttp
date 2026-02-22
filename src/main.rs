@@ -78,17 +78,6 @@ fn handle_connection(mut stream: TcpStream) {
     }
     path.push_str(&file);
 
-    // let status_line = "HTTP/1.1 200 OK";
-    // println!("Serving file at path: {:?}", path);
-    // let contents = match std::fs::read_to_string(path) {
-    //     Ok(contents) => contents,
-    //     Err(e) => {
-    //         eprintln!("Error reading file: {}", e.kind());
-    //
-    //         String::from("<h1>Internal Server Error</h1>")
-    //     }
-    // };
-
     let (contents, status_line) = match std::fs::read_to_string(path) {
         Ok(contents) => (contents, "HTTP/1.1 200 OK"),
         Err(e) => {
