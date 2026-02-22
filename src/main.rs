@@ -13,8 +13,6 @@ macro_rules! err {
 }
 
 fn main() {
-    // let listener = TcpListener::bind("0.0.0.0:8080").expect("Could not bind to address");
-
     let listener = match TcpListener::bind("0.0.0.0:8080") {
         Ok(listener) => listener,
         Err(e) => {
