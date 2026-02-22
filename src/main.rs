@@ -27,7 +27,6 @@ fn main() {
     let listener = match TcpListener::bind("0.0.0.0:8080") {
         Ok(listener) => listener,
         Err(e) => {
-            //panic!("Failed to bind: {}", e)
             err!("Failed to bind: {}", e);
             return;
         }
@@ -53,10 +52,7 @@ fn handle_connection(mut stream: TcpStream, path: &str) {
     let req: Vec<_> = req_buffer
         .lines()
         .map(|line| match line {
-            Ok(line) => {
-                // println!("line read: {}", line);
-                line
-            }
+            Ok(line) => line,
             Err(e) => {
                 err!("Error reading line: {}", e);
                 String::new()
