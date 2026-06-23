@@ -25,7 +25,10 @@ fn main() {
         .unwrap_or(String::from("app/"));
 
     let listener = match TcpListener::bind("0.0.0.0:8080") {
-        Ok(listener) => listener,
+        Ok(listener) => {
+            println!("Bound to localhost:8080");
+            listener
+        } ,
         Err(e) => {
             err!("Failed to bind: {}", e);
             return;
