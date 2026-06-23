@@ -4,15 +4,15 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+use log::{info, error,};
+use env_logger;
+
 use chrono::Local;
 
-macro_rules! err {
-    ($($arg:tt)*) => {
-        eprintln!("\x09\x1b[31m{}\x1b[0m", format!($($arg)*))
-    };
-}
 
 fn main() {
+    env_logger::init();
+
     let path = env::args()
         .nth(1)
         .map(|path| {
@@ -26,11 +26,11 @@ fn main() {
 
     let listener = match TcpListener::bind("0.0.0.0:8080") {
         Ok(listener) => {
-            println!("Bound to localhost:8080");
+            info!("Bound to localhost:8080");
             listener
         } ,
         Err(e) => {
-            err!("Failed to bind: {}", e);
+            error!("Failed to bind: {}", e);
             return;
         }
     };
@@ -38,14 +38,14 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => handle_connection(stream, path.as_str()),
-            Err(e) => err!("Connection failed: {}", e),
+            Err(e) => error!("Connection failed: {}", e),
         }
     }
 }
 
 fn handle_connection(mut stream: TcpStream, path: &str) {
     // Handle the connection
-    print!(
+    info!(
         "{} ({}) ",
         stream.peer_addr().unwrap().ip(),
         Local::now().format("%Y-%m-%d %H:%M:%S")
@@ -57,7 +57,7 @@ fn handle_connection(mut stream: TcpStream, path: &str) {
         .map(|line| match line {
             Ok(line) => line,
             Err(e) => {
-                err!("Error reading line: {}", e);
+                error!("Error reading line: {}", e);
                 String::new()
             }
         })
@@ -69,11 +69,11 @@ fn handle_connection(mut stream: TcpStream, path: &str) {
     if req[0].starts_with("GET") {
         if req[0].contains("/ ") {
             file = String::from("index.html");
-            println!("GET /");
+            info!("GET /");
         } else {
             file = req[0].split_whitespace().nth(1).unwrap().to_string();
             file.remove(0);
-            println!("GET /{}", file);
+            info!("GET /{}", file);
         }
     }
 
@@ -83,13 +83,13 @@ fn handle_connection(mut stream: TcpStream, path: &str) {
         Ok(contents) => (contents, "HTTP/1.1 200 OK"),
         Err(e) => {
             if e.kind() == ErrorKind::NotFound {
-                err!("404 Error: file not found");
+                error!("404 Error: file not found");
                 (
                     String::from("<h1>404 Error: file not found</h1>"),
                     "HTTP/1.1 404 Not Found",
                 )
             } else {
-                err!("Error reading file: {}", e);
+                error!("Error reading file: {}", e);
 
                 (
                     String::from("<h1>Internal Server Error</h1>"),
