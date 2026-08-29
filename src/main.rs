@@ -4,11 +4,8 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
-use log::{info, error,};
 use env_logger;
-
-use chrono::Local;
-
+use log::{error, info};
 
 fn main() {
     env_logger::Builder::new()
@@ -30,7 +27,7 @@ fn main() {
         Ok(listener) => {
             info!("Bound to localhost:8080");
             listener
-        } ,
+        }
         Err(e) => {
             error!("Failed to bind: {}", e);
             return;
