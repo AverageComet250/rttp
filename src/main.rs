@@ -47,11 +47,6 @@ fn main() {
 
 fn handle_connection(mut stream: TcpStream, path: &str) {
     // Handle the connection
-    info!(
-        "{} ({}) ",
-        stream.peer_addr().unwrap().ip(),
-        Local::now().format("%Y-%m-%d %H:%M:%S")
-    );
 
     let req_buffer = BufReader::new(&stream);
     let req: Vec<_> = req_buffer
@@ -71,11 +66,11 @@ fn handle_connection(mut stream: TcpStream, path: &str) {
     if req[0].starts_with("GET") {
         if req[0].contains("/ ") {
             file = String::from("index.html");
-            info!("GET /");
+            info!("GET / {}", stream.peer_addr().unwrap().ip());
         } else {
             file = req[0].split_whitespace().nth(1).unwrap().to_string();
             file.remove(0);
-            info!("GET /{}", file);
+            info!("GET /{} {}", file, stream.peer_addr().unwrap().ip());
         }
     }
 
