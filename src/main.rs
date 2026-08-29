@@ -81,22 +81,22 @@ fn handle_connection(mut stream: TcpStream, path: &str) {
 
     let (contents, status_line) = match std::fs::read_to_string(file) {
         Ok(contents) => (contents, "HTTP/1.1 200 OK"),
-        Err(e) => {
-            if e.kind() == ErrorKind::NotFound {
+        Err(e) => match e.kind() {
+            ErrorKind::NotFound => {
                 error!("404 Error: file not found");
                 (
                     String::from("<h1>404 Error: file not found</h1>"),
                     "HTTP/1.1 404 Not Found",
                 )
-            } else {
+            }
+            _ => {
                 error!("Error reading file: {}", e);
-
                 (
                     String::from("<h1>Internal Server Error</h1>"),
                     "HTTP 500 Internal Server Error",
                 )
             }
-        }
+        },
     };
 
     let length = contents.len();
