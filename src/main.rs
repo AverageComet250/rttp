@@ -11,7 +11,9 @@ use chrono::Local;
 
 
 fn main() {
-    env_logger::init();
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .init();
 
     let path = env::args()
         .nth(1)
