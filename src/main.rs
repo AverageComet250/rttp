@@ -7,7 +7,7 @@ use std::{
 use env_logger;
 use log::{error, info};
 
-fn main() {
+fn main() -> Result<(), std::io::Error> {
     env_logger::Builder::new()
         .filter_level(log::LevelFilter::Info)
         .init();
@@ -23,40 +23,31 @@ fn main() {
         })
         .unwrap_or(String::from("app/"));
 
-    let listener = match TcpListener::bind("0.0.0.0:8080") {
-        Ok(listener) => {
-            info!("Bound to localhost:8080");
-            listener
-        }
-        Err(e) => {
-            error!("Failed to bind: {}", e);
-            return;
-        }
-    };
+    let listener = TcpListener::bind("0.0.0.0:8080")?;
+    info!("Bound to localhost:8080");
 
     for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => handle_connection(stream, path.as_str()),
-            Err(e) => error!("Connection failed: {}", e),
-        }
+        handle_connection(stream?, path.as_str())?;
     }
+
+    Ok(())
 }
 
-fn handle_connection(mut stream: TcpStream, path: &str) {
+fn handle_connection(mut stream: TcpStream, path: &str) -> Result<(), std::io::Error> {
     // Handle the connection
 
     let req_buffer = BufReader::new(&stream);
-    let req: Vec<_> = req_buffer
-        .lines()
-        .map(|line| match line {
-            Ok(line) => line,
-            Err(e) => {
-                error!("Error reading line: {}", e);
-                String::new()
-            }
-        })
-        .take_while(|line| !line.is_empty())
-        .collect();
+    let mut req = Vec::new();
+
+    for line in req_buffer.lines() {
+        let line = line?;
+
+        if line.is_empty() {
+            break;
+        }
+
+        req.push(line);
+    }
 
     let mut file = String::new();
 
@@ -96,5 +87,6 @@ fn handle_connection(mut stream: TcpStream, path: &str) {
     let length = contents.len();
     let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
 
-    stream.write_all(response.as_bytes()).unwrap();
+    stream.write_all(response.as_bytes())?;
+    Ok(())
 }
