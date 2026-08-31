@@ -33,8 +33,9 @@ fn main() -> Result<(), std::io::Error> {
     Ok(())
 }
 
+/// Handle the connection
+/// Award for most useful docstring
 fn handle_connection(mut stream: TcpStream, path: &str) -> Result<(), std::io::Error> {
-    // Handle the connection
 
     let req_buffer = BufReader::new(&stream);
     let mut req = Vec::new();
