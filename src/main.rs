@@ -37,6 +37,8 @@ fn main() -> Result<(), std::io::Error> {
 /// Award for most useful docstring
 fn handle_connection(mut stream: TcpStream, path: &str) -> Result<(), std::io::Error> {
 
+    // NOTE: right now this returns `std::io::Error` on a bad request
+    // TODO: send a 400 response instead
     let req_buffer = BufReader::new(&stream);
     let mut req = Vec::new();
 
